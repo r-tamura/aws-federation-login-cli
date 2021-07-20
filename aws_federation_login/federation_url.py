@@ -1,21 +1,18 @@
 import json
 import typing as t
 import webbrowser
-from dataclasses import dataclass
 from os import mkdir, path
-from typing import Annotated, Optional
-from urllib.parse import quote, quote_plus
+from urllib.parse import quote_plus
 
 import boto3
 import requests
-import toml
-from botocore.configloader import load_config
 from jinja2 import Environment, FileSystemLoader
-from requests.sessions import session
 
-Duration = Annotated[int, "Seconds"]
+from .config import load_config
 
-def build_query_string(params: dict[str, str]) -> Annotated[str, "?key1=value1&key2=value2"]:
+Duration = t.Annotated[int, "Seconds"]
+
+def build_query_string(params: dict[str, str]) -> t.Annotated[str, "?key1=value1&key2=value2"]:
     return "?" + "&".join(map(lambda kv: f"{kv[0]}={kv[1]}", params.items()))
 
 def build_role_arn(account: str, role_name: str) -> str:
@@ -41,10 +38,10 @@ def get_signin_token(assumed_role_object: dict[str, dict[str, str]], duration: D
     params = {
         'Action': 'getSigninToken',
         'SessionDuration': str(duration),
-        'Session': quote_plus(json_string_with_temp_credentials)
+        'Session': json_string_with_temp_credentials
     }
 
-    r = requests.get("https://signin.aws.amazon.com/federation", params=params)
+    r = requests.get(f"https://signin.aws.amazon.com/federation", params=params)
     if r.status_code != 200:
         r.raise_for_status()
 
@@ -68,7 +65,7 @@ def generate_federation_url(
     role: t.Optional[str] = None,
     session_name: t.Optional[str],
     duration: Duration = 14400, # 4 hours
-    destination: t.Optional[str],
+    destination: str,
     mfa_device_arn: t.Optional[str] = None,
 ) -> str:
 
@@ -78,10 +75,8 @@ def generate_federation_url(
         role_arn = build_role_arn(account, role)
 
     if session_name is None:
-        session_name = "DeepRacerTraningUser"
+        session_name = "AnonymousUser"
 
-    if destination is None:
-        destination = "https://console.aws.amazon.com/"
 
     sts = boto3.client('sts')
     if mfa_device_arn is not None:
@@ -105,34 +100,23 @@ def generate_federation_url(
 ASSETS_PATH=path.realpath("assets")
 BUILD_PATH=path.realpath("__appbuild__")
 
-@dataclass
-class Config():
-    role_arn: str
-    session_name: t.Optional[str] = None
-    destination: t.Optional[str] = None
-    mfa_device_arn: t.Optional[str] = None
 
-
-def load_config(config_path: str = "broker.toml") -> Config:
-    toml_dict = toml.load(config_path)
-    role_arn = toml_dict.get("role_arn", None)
-    if role_arn is None:
-        raise TypeError("'role_arn' must be set")
-
-    return Config(**toml_dict)
 
 
 def main():
     config = load_config()
 
+    destination = config.destination
+    if destination is None:
+        destination = "https://console.aws.amazon.com/"
+
     url = generate_federation_url(
         role_arn=config.role_arn,
         session_name=config.session_name,
-        destination=config.destination,
+        destination=destination,
         mfa_device_arn=config.mfa_device_arn
     )
 
-    template_path = path.join(ASSETS_PATH, "signin.template.html")
     output_path = path.join(app_build_path(), "signin.html")
     with open(output_path, "w") as actual:
         env = Environment(
@@ -141,7 +125,7 @@ def main():
         template = env.get_template("signin.template.html")
         params = {
             "url": url,
-            "destination": config.destination,
+            "destination": destination,
         }
         actual.write(template.render(params))
 

@@ -1,3 +1,0 @@
-role_arn="arn:aws:iam::991720041588:role/DeepRacerTrainingRole"
-destination="https://console.aws.amazon.com/deepracer/home?region=us-east-1#league"
-mfa_device_arn="arn:aws:iam::878754454461:mfa/tamura-r"
