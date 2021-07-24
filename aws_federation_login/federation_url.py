@@ -118,9 +118,10 @@ def main():
     )
 
     output_path = path.join(app_build_path(), "signin.html")
+    __dirname__ = path.dirname(__file__)
     with open(output_path, "w") as actual:
         env = Environment(
-            loader=FileSystemLoader("assets/"),
+            loader=FileSystemLoader(path.join(__dirname__, "..", "assets/")),
         )
         template = env.get_template("signin.template.html")
         params = {
