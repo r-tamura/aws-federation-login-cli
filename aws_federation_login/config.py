@@ -10,8 +10,11 @@ DEFAULT_CONFIG_FILE_NAME = "awsfederationconfig.toml"
 class Config():
     role_arn: str
     session_name: t.Optional[str] = None
+    """ サインイン後のリダイレクト先AWS管理コンソール上のURL """
     destination: t.Optional[str] = None
     mfa_device_arn: t.Optional[str] = None
+    """ セッション満了までの時間(秒) """
+    duration: t.Optional[str] = None
 
 def discorver_config(filename: str = None) -> str:
     if filename is None:
