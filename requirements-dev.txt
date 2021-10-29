@@ -1,0 +1,36 @@
+attrs==21.2.0
+# Editable Git install with no remote (aws-federation-login==0.0.1)
+-e /Users/r-tamura/playground/aws-federation-login-cli
+black==21.9b0
+boto3==1.19.6
+botocore==1.22.6
+certifi==2021.10.8
+charset-normalizer==2.0.7
+click==8.0.3
+idna==3.3
+iniconfig==1.1.1
+Jinja2==3.0.2
+jmespath==0.10.0
+MarkupSafe==2.0.1
+mypy-extensions==0.4.3
+packaging==21.0
+pathspec==0.9.0
+platformdirs==2.4.0
+pluggy==1.0.0
+prompt-toolkit==1.0.14
+py==1.10.0
+Pygments==2.10.0
+PyInquirer==1.0.3
+pyparsing==3.0.3
+pytest==6.2.5
+python-dateutil==2.8.2
+regex==2021.10.23
+requests==2.26.0
+requests-mock==1.9.3
+s3transfer==0.5.0
+six==1.16.0
+toml==0.10.2
+tomli==1.2.2
+typing-extensions==3.10.0.2
+urllib3==1.26.7
+wcwidth==0.2.5

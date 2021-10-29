@@ -1,13 +1,15 @@
+import logging
 import pathlib
 import typing as t
 from dataclasses import dataclass
 
 import toml
-from PyInquirer import prompt
 
 DEFAULT_CONFIG_FILE_NAME = "awsfederationconfig.toml"
+
+
 @dataclass
-class Config():
+class Config:
     role_arn: str
     session_name: t.Optional[str] = None
     """ サインイン後のリダイレクト先AWS管理コンソール上のURL """
@@ -16,12 +18,37 @@ class Config():
     """ セッション満了までの時間(秒) """
     duration: t.Optional[str] = None
 
-def discorver_config(filename: str = None) -> str:
+
+@dataclass
+class ConfigMap:
+    configs: dict[t.Annotated[str, "name"], Config]
+
+    @property
+    def first(self) -> Config:
+        return list(self.configs.values())[0]
+
+    def __len__(self):
+        return len(self.configs)
+
+    def keys(self):
+        return self.configs.keys()
+
+    def items(self):
+        return self.configs.items()
+
+    def values(self):
+        return self.configs.values()
+
+    def get(self, name: str) -> t.Optional[Config]:
+        return self.configs.get(name, None)
+
+
+def discorver_config_file(filename: str = None) -> str:
     if filename is None:
         filename = DEFAULT_CONFIG_FILE_NAME
     candidates = (
         pathlib.Path(".") / filename,
-        pathlib.Path.home() / ".my_local" / "aws_federation" / filename
+        pathlib.Path.home() / ".my_local" / "aws_federation" / filename,
     )
 
     for cand in candidates:
@@ -30,9 +57,10 @@ def discorver_config(filename: str = None) -> str:
 
     raise OSError(f"{filename} is not found")
 
-def load_config(config_path: t.Optional[str] = None) -> Config:
+
+def load_config_file(config_path: t.Optional[str] = None) -> ConfigMap:
     if config_path is None:
-        config_path = discorver_config()
+        config_path = discorver_config_file()
 
     toml_dict = toml.load(config_path)
     profile_map: t.Optional[dict] = toml_dict.get("profile")
@@ -40,18 +68,6 @@ def load_config(config_path: t.Optional[str] = None) -> Config:
     if profile_map is None:
         raise ValueError("no profile found")
 
-    profiles = list(profile_map.items())
-    if len(profiles) == 1:
-        profile = profiles[0][0]
-        return Config(**profile)
-
-    answers = prompt([{
-        "type": "list",
-        "name": "profile",
-        "message": "Choose a profile",
-        "choices": [name for name, profile in profiles]
-    }])
-
-    profile_name = answers["profile"]
-
-    return Config(**profile_map[profile_name])
+    profiles = profile_map.items()
+    config_map = {name: Config(**profile) for name, profile in profiles}
+    return ConfigMap(configs=config_map)
