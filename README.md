@@ -1,15 +1,21 @@
-# AWS Custom Identity Broker
+# AWS Federation Login CLI
 
-# How to use
+## How to use
 
-1. Create a config file
+1. Create a config file in `$HOME/.config/aws_federation_cli/config.toml`
 
 ```shell
-
+[profile.<name>]
+role_arn = "arn:aws:iam::9999999999:role/YourRole"
+destination = "https://console.aws.amazon.com/console/home?region=us-east-1"
+duration = 43200
+session_name = "<session name>"
 ```
 
+2. Run the command
+
 ```sh
-awsconsole
+aws-federation-login
 ```
 
 ## インストール

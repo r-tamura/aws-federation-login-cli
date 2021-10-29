@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import toml
 
-DEFAULT_CONFIG_FILE_NAME = "awsfederationconfig.toml"
+DEFAULT_CONFIG_FILE_NAME = "config.toml"
 
 
 @dataclass
@@ -48,7 +48,7 @@ def discorver_config_file(filename: str = None) -> str:
         filename = DEFAULT_CONFIG_FILE_NAME
     candidates = (
         pathlib.Path(".") / filename,
-        pathlib.Path.home() / ".my_local" / "aws_federation" / filename,
+        pathlib.Path.home() / ".config" / "aws_federation_login" / filename,
     )
 
     for cand in candidates:

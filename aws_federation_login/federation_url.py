@@ -1,6 +1,7 @@
 import dataclasses
 import json
 import logging
+import tempfile
 import typing as t
 import webbrowser
 from os import mkdir, path
@@ -154,6 +155,21 @@ def let_user_choose_config(names: t.List[str]) -> str:
     return choosed_profile_name
 
 
+def open_link_page(
+    url: str, destination: str, template_dir: str, temphtml: tempfile._TemporaryFileWrapper[str]
+):
+    env = Environment(
+        loader=FileSystemLoader(path.join(template_dir, "..", "assets/")),
+    )
+    template = env.get_template("signin.template.html")
+    params = {
+        "url": url,
+        "destination": destination,
+    }
+    temphtml.write(template.render(params))
+    webbrowser.open(f"file://{temphtml.name}")
+
+
 def main():
     configs = load_config_file()
 
@@ -176,17 +192,12 @@ def main():
         mfa_device_arn=config.mfa_device_arn,
     )
 
-    output_path = path.join(app_build_path(), "signin.html")
-    __dirname__ = path.dirname(__file__)
-    with open(output_path, "w") as actual:
-        env = Environment(
-            loader=FileSystemLoader(path.join(__dirname__, "..", "assets/")),
+    # output_path = path.join(app_build_path(), "signin.html")
+    template_dir = path.dirname(__file__)
+    with tempfile.NamedTemporaryFile(suffix=".html", mode="w", delete=False) as temphtml:
+        open_link_page(
+            url=url,
+            destination=destination,
+            template_dir=template_dir,
+            temphtml=temphtml,
         )
-        template = env.get_template("signin.template.html")
-        params = {
-            "url": url,
-            "destination": destination,
-        }
-        actual.write(template.render(params))
-
-    webbrowser.open(f"file://{output_path}")
