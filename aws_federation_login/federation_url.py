@@ -156,7 +156,7 @@ def let_user_choose_config(names: t.List[str]) -> str:
 
 
 def open_link_page(
-    url: str, destination: str, template_dir: str, temphtml: tempfile._TemporaryFileWrapper[str]
+    url: str, destination: str, template_dir: str, temphtml: tempfile._TemporaryFileWrapper
 ):
     env = Environment(
         loader=FileSystemLoader(path.join(template_dir, "..", "assets/")),
