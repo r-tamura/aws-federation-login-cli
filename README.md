@@ -1,5 +1,17 @@
 # AWS Custom Identity Broker
 
+# How to use
+
+1. Create a config file
+
+```shell
+
+```
+
+```sh
+awsconsole
+```
+
 ## インストール
 
 ### 開発環境用インストール
