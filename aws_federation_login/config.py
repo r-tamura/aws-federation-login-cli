@@ -43,7 +43,7 @@ class ConfigMap:
         return self.configs.get(name, None)
 
 
-def discorver_config_file(filename: str = None) -> str:
+def discorver_config_file(filename: t.Optional[str] = None) -> str:
     if filename is None:
         filename = DEFAULT_CONFIG_FILE_NAME
     candidates = (

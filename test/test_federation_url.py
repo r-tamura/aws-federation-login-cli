@@ -12,7 +12,7 @@ def test_有効なセッション時間を指定したとき_サインイント�
         "https://signin.aws.amazon.com/federation", text=f'{{"SigninToken": "{test_sign_token}"}}'
     )
     test_creds = Credentials(
-        AccessKeyId="accesskey", SecretAccessKey="secret", SessionToken="token"
+        access_key_id="accesskey", secret_access_key="secret", session_token="token"
     )
     # Act
     actual = get_signin_token(test_creds, 3000)
@@ -27,7 +27,7 @@ def test_有効でないなセッション時間を指定したとき_サイン�
         "https://signin.aws.amazon.com/federation", text=f'{{"SigninToken": "{test_sign_token}"}}'
     )
     test_creds = Credentials(
-        AccessKeyId="accesskey", SecretAccessKey="secret", SessionToken="token"
+        access_key_id="accesskey", secret_access_key="secret", session_token="token"
     )
     #  Act & Assert
     invalid_duration = 999999

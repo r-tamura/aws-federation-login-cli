@@ -1,6 +1,8 @@
 import dataclasses
+import enum
 import json
 import logging
+import os
 import tempfile
 import typing as t
 import webbrowser
@@ -39,14 +41,14 @@ def is_valid_duration(duration: int):
 
 @dataclasses.dataclass
 class Credentials:
-    AccessKeyId: str
-    SecretAccessKey: str
-    SessionToken: str
+    access_key_id: str
+    secret_access_key: str
+    session_token: str
 
 
 @dataclasses.dataclass
 class AssumeRoleResponse:
-    Credentials: Credentials
+    credentials: Credentials
 
 
 def get_signin_token(credentials: Credentials, duration: Duration) -> str:
@@ -63,9 +65,9 @@ def get_signin_token(credentials: Credentials, duration: Duration) -> str:
         raise TypeError("AssumeRoleで取得したオブジェクトを指定してください")
 
     url_credentials = {
-        "sessionId": credentials.AccessKeyId,
-        "sessionKey": credentials.SecretAccessKey,
-        "sessionToken": credentials.SessionToken,
+        "sessionId": credentials.access_key_id,
+        "sessionKey": credentials.secret_access_key,
+        "sessionToken": credentials.session_token,
     }
     json_string_with_temp_credentials = json.dumps(url_credentials)
     params = {
@@ -92,17 +94,14 @@ def get_signin_url(signin_token: str, destination: str):
     return request_url
 
 
-def generate_federation_url(
-    *,
+def get_temporary_credentials(
+    session_name: t.Optional[str],
     role_arn: t.Optional[str] = None,
     account: t.Optional[str] = None,
     role: t.Optional[str] = None,
-    session_name: t.Optional[str],
-    duration: Duration = 14400,  # 4 hours
-    destination: str,
     mfa_device_arn: t.Optional[str] = None,
-) -> str:
-
+    mfa_code: t.Optional[str] = None,
+) -> Credentials:
     if role_arn is None:
         assert account is not None
         assert role is not None
@@ -113,24 +112,35 @@ def generate_federation_url(
 
     sts = boto3.client("sts")
     if mfa_device_arn is not None:
-        mfacode = input(f"Enter MFA code for '{mfa_device_arn}': ")
+        if mfa_code is None:
+            raise ValueError("please set a mfa code")
         assumed_role_dict = sts.assume_role(
             RoleArn=role_arn,
             RoleSessionName=session_name,
             SerialNumber=mfa_device_arn,
-            TokenCode=mfacode,
+            TokenCode=mfa_code,
         )
     else:
         assumed_role_dict = sts.assume_role(
             RoleArn=role_arn,
             RoleSessionName=session_name,
         )
-
     credentials = Credentials(
-        AccessKeyId=assumed_role_dict["Credentials"]["AccessKeyId"],
-        SecretAccessKey=assumed_role_dict["Credentials"]["SecretAccessKey"],
-        SessionToken=assumed_role_dict["Credentials"]["SessionToken"],
+        access_key_id=assumed_role_dict["Credentials"]["AccessKeyId"],
+        secret_access_key=assumed_role_dict["Credentials"]["SecretAccessKey"],
+        session_token=assumed_role_dict["Credentials"]["SessionToken"],
     )
+    return credentials
+
+
+def generate_federation_url(
+    *,
+    credentials: Credentials,
+    duration: Duration = 14400,  # 4 hours
+    destination: str,
+) -> str:
+    """一時クレデンシャルからAWSコンソール画面へのサインインURLを作成します。"""
+
     signin_token = get_signin_token(credentials, duration)
     request_url = get_signin_url(signin_token, destination)
     return request_url
@@ -170,7 +180,22 @@ def open_link_page(
     webbrowser.open(f"file://{temphtml.name}")
 
 
-def main():
+def get_credentials_from_env():
+    access_key_id = os.environ.get("AWS_ACCESS_KEY_ID")
+    secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY")
+    session_token = os.environ.get("AWS_SESSION_TOKEN")
+    if access_key_id and secret_access_key and session_token:
+        return Credentials(
+            access_key_id=access_key_id,
+            secret_access_key=secret_access_key,
+            session_token=session_token,
+        )
+    return None
+
+
+def get_credentials_from_config() -> tuple[
+    Credentials, t.Annotated[t.Optional[str], "destination"]
+]:
     configs = load_config_file()
 
     config = None
@@ -182,14 +207,49 @@ def main():
     assert config is not None
 
     destination = config.destination
+
+    mfa_code = None
+    if config.mfa_device_arn:
+        mfa_code = input(f"Enter MFA code for '{config.mfa_device_arn}': ")
+    credentials = get_temporary_credentials(
+        role_arn=config.role_arn,
+        session_name=config.session_name,
+        mfa_device_arn=config.mfa_device_arn,
+        mfa_code=mfa_code,
+    )
+    return credentials, destination
+
+
+class ExitCode(enum.IntEnum):
+    SUCCESS = 0
+
+
+def main(
+    access_key_id: t.Optional[str] = None,
+    secret_access_key: t.Optional[str] = None,
+    session_token: t.Optional[str] = None,
+    destination: t.Optional[str] = None,
+) -> int:
+    credentials = None
+    if access_key_id and secret_access_key and session_token:
+        credentials = Credentials(
+            access_key_id=access_key_id,
+            secret_access_key=secret_access_key,
+            session_token=session_token,
+        )
+        logger.debug("credentials was retrieved from arguments")
+    elif (credentials := get_credentials_from_env()) is not None:
+        logger.debug("credentials was retrieved from env")
+        ...
+    else:
+        credentials, destination = get_credentials_from_config()
+
     if destination is None:
         destination = "https://console.aws.amazon.com/"
 
     url = generate_federation_url(
-        role_arn=config.role_arn,
-        session_name=config.session_name,
+        credentials=credentials,
         destination=destination,
-        mfa_device_arn=config.mfa_device_arn,
     )
 
     # output_path = path.join(app_build_path(), "signin.html")
@@ -201,3 +261,5 @@ def main():
             template_dir=template_dir,
             temphtml=temphtml,
         )
+
+    return ExitCode.SUCCESS
