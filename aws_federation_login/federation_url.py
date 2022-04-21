@@ -136,10 +136,12 @@ def get_temporary_credentials(
 def generate_federation_url(
     *,
     credentials: Credentials,
-    duration: Duration = 14400,  # 4 hours
     destination: str,
+    duration: t.Optional[Duration],
 ) -> str:
     """一時クレデンシャルからAWSコンソール画面へのサインインURLを作成します。"""
+    if duration is None:
+        duration = 14400  # 4 hours
 
     signin_token = get_signin_token(credentials, duration)
     request_url = get_signin_url(signin_token, destination)
@@ -229,6 +231,7 @@ def main(
     secret_access_key: t.Optional[str] = None,
     session_token: t.Optional[str] = None,
     destination: t.Optional[str] = None,
+    duration: t.Optional[Duration] = None,
 ) -> int:
     credentials = None
     if access_key_id and secret_access_key and session_token:
@@ -248,8 +251,7 @@ def main(
         destination = "https://console.aws.amazon.com/"
 
     url = generate_federation_url(
-        credentials=credentials,
-        destination=destination,
+        credentials=credentials, destination=destination, duration=duration
     )
 
     # output_path = path.join(app_build_path(), "signin.html")
