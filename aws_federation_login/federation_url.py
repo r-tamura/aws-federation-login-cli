@@ -19,6 +19,7 @@ from .config import load_config_file
 Duration = t.Annotated[int, "Seconds"]
 
 logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 def build_query_string(params: dict[str, str]) -> t.Annotated[str, "?key1=value1&key2=value2"]:
@@ -148,7 +149,6 @@ def generate_federation_url(
     return request_url
 
 
-ASSETS_PATH = path.realpath("assets")
 BUILD_PATH = path.realpath("__appbuild__")
 
 
@@ -165,21 +165,6 @@ def let_user_choose_config(names: t.List[str]) -> str:
     )
     choosed_profile_name = answers["profile"]
     return choosed_profile_name
-
-
-def open_link_page(
-    url: str, destination: str, template_dir: str, temphtml: tempfile._TemporaryFileWrapper
-):
-    env = Environment(
-        loader=FileSystemLoader(path.join(template_dir, "..", "assets/")),
-    )
-    template = env.get_template("signin.template.html")
-    params = {
-        "url": url,
-        "destination": destination,
-    }
-    temphtml.write(template.render(params))
-    webbrowser.open(f"file://{temphtml.name}")
 
 
 def get_credentials_from_env():
@@ -222,8 +207,10 @@ def get_credentials_from_config() -> tuple[
     return credentials, destination
 
 
-class ExitCode(enum.IntEnum):
-    SUCCESS = 0
+@dataclasses.dataclass
+class FederationLoginInfo:
+    url: str
+    destination: str
 
 
 def main(
@@ -232,7 +219,7 @@ def main(
     session_token: t.Optional[str] = None,
     destination: t.Optional[str] = None,
     duration: t.Optional[Duration] = None,
-) -> int:
+) -> FederationLoginInfo:
     credentials = None
     if access_key_id and secret_access_key and session_token:
         credentials = Credentials(
@@ -254,14 +241,4 @@ def main(
         credentials=credentials, destination=destination, duration=duration
     )
 
-    # output_path = path.join(app_build_path(), "signin.html")
-    template_dir = path.dirname(__file__)
-    with tempfile.NamedTemporaryFile(suffix=".html", mode="w", delete=False) as temphtml:
-        open_link_page(
-            url=url,
-            destination=destination,
-            template_dir=template_dir,
-            temphtml=temphtml,
-        )
-
-    return ExitCode.SUCCESS
+    return FederationLoginInfo(url=url, destination=destination)

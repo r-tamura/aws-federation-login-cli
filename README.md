@@ -20,30 +20,16 @@
 
 ## Install
 
-### インストール
-
 ```shell
 pip install git+https://github.com/r-tamura/aws-federation-login-cli.git
 ```
 
-### アンインストール
-
-```shell
-pip uninstall aws-federation-login
-```
-
-## 開発
+## Development
 
 ```shell
 git clone https://github.com/r-tamura/aws-federation-login-cli.git
 cd aws-federation-login-cli
 pip install -e .
-```
-
-## 実行方法
-
-```shell
-aws-federation-login
 ```
 
 ## その他
