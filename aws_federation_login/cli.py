@@ -15,13 +15,15 @@ from aws_federation_login import LOGGER_NAME, federation_url
 class CliArguments:
     destination_url: str
     duration: int
-    debug: bool
+    debug: bool = False
+    web: bool = False
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--debug", action="store_true")
 parser.add_argument("--destination-url", type=str, help="The url navigate to after login")
 parser.add_argument("--duration", type=int, help="Session duration in seconds")
+parser.add_argument("--web", action="store_true", help="open your browser and show the url in it")
 args: CliArguments = parser.parse_args()  # type: ignore
 
 loglevel = logging.DEBUG if args.debug else logging.WARNING
@@ -57,13 +59,17 @@ def main():
         template_dir = path.join(path.dirname(__file__), "assets")
         logger.debug(f"{template_dir=}")
 
-        with tempfile.NamedTemporaryFile(suffix=".html", mode="w", delete=False) as temphtml:
-            open_link_page(
-                url=federation_login.url,
-                destination=federation_login.destination,
-                template_dir=template_dir,
-                temphtml=temphtml,
-            )
+        if args.web:
+            with tempfile.NamedTemporaryFile(suffix=".html", mode="w", delete=False) as temphtml:
+                open_link_page(
+                    url=federation_login.url,
+                    destination=federation_login.destination,
+                    template_dir=template_dir,
+                    temphtml=temphtml,
+                )
+        else:
+            print(federation_login.url)
+
         sys.exit(0)
     except EOFError:
         # Keyborardで Ctrl+C を入力されたとき (PyInquirerはEOFErrorを出す)

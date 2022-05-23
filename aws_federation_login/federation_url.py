@@ -113,6 +113,7 @@ def get_temporary_credentials(
 
     sts = boto3.client("sts")
     if mfa_device_arn is not None:
+        logger.debug("mfa_device_arn was passed")
         if mfa_code is None:
             raise ValueError("please set a mfa code")
         assumed_role_dict = sts.assume_role(
@@ -122,6 +123,7 @@ def get_temporary_credentials(
             TokenCode=mfa_code,
         )
     else:
+        logger.debug("mfa_device_arn was not passed")
         assumed_role_dict = sts.assume_role(
             RoleArn=role_arn,
             RoleSessionName=session_name,
