@@ -1,17 +1,13 @@
 import dataclasses
-import enum
 import json
 import logging
 import os
-import tempfile
 import typing as t
-import webbrowser
 from os import mkdir, path
 from urllib.parse import quote_plus
 
 import boto3
 import requests
-from jinja2 import Environment, FileSystemLoader
 from PyInquirer import prompt
 
 from .config import load_config_file
@@ -37,7 +33,7 @@ def app_build_path():
 
 
 def is_valid_duration(duration: int):
-    return 0 < duration < 43200
+    return 0 < duration <= 43200
 
 
 @dataclasses.dataclass
@@ -199,7 +195,9 @@ def get_credentials_from_config() -> tuple[
 
     mfa_code = None
     if config.mfa_device_arn:
+        logger.debug("MFA device ARN: %s", config.mfa_device_arn)
         mfa_code = input(f"Enter MFA code for '{config.mfa_device_arn}': ")
+
     credentials = get_temporary_credentials(
         role_arn=config.role_arn,
         session_name=config.session_name,

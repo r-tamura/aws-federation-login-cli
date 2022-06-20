@@ -146,5 +146,5 @@ cython_debug/
 
 __appbuild__
 
-# アプリケーションの設定ファイル
-broker.toml
+# アプリケーション定義
+work/

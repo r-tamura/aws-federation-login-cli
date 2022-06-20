@@ -32,6 +32,12 @@ cd aws-federation-login-cli
 pip install -e .
 ```
 
+- `requirements-dev.txt`の更新
+
+```shell
+pip freeze --exclude-editable > requirements-dev.txt
+```
+
 ## その他
 
 ### 3.10.0 環境だと動作しない
