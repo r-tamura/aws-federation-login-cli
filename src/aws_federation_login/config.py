@@ -5,7 +5,11 @@ from dataclasses import dataclass
 
 import toml
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
 DEFAULT_CONFIG_FILE_NAME = "config.toml"
+
 
 
 @dataclass
@@ -62,6 +66,7 @@ def load_config_file(config_path: t.Optional[str] = None) -> ConfigMap:
     if config_path is None:
         config_path = discorver_config_file()
 
+    logger.debug(f"loaded config: {config_path}")
     toml_dict = toml.load(config_path)
     profile_map: t.Optional[dict] = toml_dict.get("profile")
 

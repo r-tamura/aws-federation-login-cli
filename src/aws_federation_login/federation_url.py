@@ -8,7 +8,6 @@ from urllib.parse import quote_plus
 
 import boto3
 import requests
-from PyInquirer import prompt
 
 from .config import load_config_file
 
@@ -16,7 +15,6 @@ Duration = t.Annotated[int, "Seconds"]
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-
 
 def build_query_string(params: dict[str, str]) -> t.Annotated[str, "?key1=value1&key2=value2"]:
     return "?" + "&".join(map(lambda kv: f"{kv[0]}={kv[1]}", params.items()))
@@ -109,9 +107,10 @@ def get_temporary_credentials(
 
     sts = boto3.client("sts")
     if mfa_device_arn is not None:
-        logger.debug("mfa_device_arn was passed")
+        logger.debug("mfa_device_arn: %s", mfa_device_arn)
         if mfa_code is None:
             raise ValueError("please set a mfa code")
+        logger.info("Assuming role '%s'", role_arn)
         assumed_role_dict = sts.assume_role(
             RoleArn=role_arn,
             RoleSessionName=session_name,
@@ -150,19 +149,19 @@ def generate_federation_url(
 BUILD_PATH = path.realpath("__appbuild__")
 
 
-def let_user_choose_config(names: t.List[str]) -> str:
-    answers = prompt(
-        [
-            {
-                "type": "list",
-                "name": "profile",
-                "message": "Choose a profile",
-                "choices": names,
-            }
-        ]
-    )
-    choosed_profile_name = answers["profile"]
-    return choosed_profile_name
+# def let_user_choose_config(names: t.List[str]) -> str:
+#     answers = prompt(
+#         [
+#             {
+#                 "type": "list",
+#                 "name": "profile",
+#                 "message": "Choose a profile",
+#                 "choices": names,
+#             }
+#         ]
+#     )
+#     choosed_profile_name = answers["profile"]
+#     return choosed_profile_name
 
 
 def get_credentials_from_env():
@@ -187,8 +186,10 @@ def get_credentials_from_config() -> tuple[
     if len(configs) == 1:
         config = configs.first
     else:
-        name = let_user_choose_config(list(configs.keys()))
-        config = configs.get(name)
+        # PyInquirerはpython3.10以上で動作しないので、一旦コメントアウト
+        raise NotImplementedError("multiple config is not supported yet")
+        # name = let_user_choose_config(list(configs.keys()))
+        # config = configs.get(name)
     assert config is not None
 
     destination = config.destination

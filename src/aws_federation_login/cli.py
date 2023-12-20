@@ -10,7 +10,6 @@ from jinja2 import Environment, FileSystemLoader
 
 from aws_federation_login import LOGGER_NAME, federation_url
 
-
 @dataclass
 class CliArguments:
     destination_url: str
@@ -26,7 +25,7 @@ parser.add_argument("--duration", type=int, help="Session duration in seconds")
 parser.add_argument("--web", action="store_true", help="open your browser and show the url in it")
 args: CliArguments = parser.parse_args()  # type: ignore
 
-loglevel = logging.DEBUG if args.debug else logging.WARNING
+loglevel = logging.DEBUG if args.debug else logging.INFO
 logger = logging.getLogger(LOGGER_NAME)
 logger.setLevel(loglevel)
 handler = logging.StreamHandler()
