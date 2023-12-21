@@ -47,7 +47,7 @@ class ConfigMap:
         return self.configs.get(name, None)
 
 
-def discorver_config_file(filename: t.Optional[str] = None) -> str:
+def discover_config_file(filename: t.Optional[str] = None) -> str:
     if filename is None:
         filename = DEFAULT_CONFIG_FILE_NAME
     candidates = (
@@ -55,16 +55,16 @@ def discorver_config_file(filename: t.Optional[str] = None) -> str:
         pathlib.Path.home() / ".config" / "aws_federation_login" / filename,
     )
 
-    for cand in candidates:
-        if cand.exists():
-            return str(cand)
+    for candidate in candidates:
+        if candidate.exists():
+            return str(candidate)
 
     raise OSError(f"{filename} is not found")
 
 
 def load_config_file(config_path: t.Optional[str] = None) -> ConfigMap:
     if config_path is None:
-        config_path = discorver_config_file()
+        config_path = discover_config_file()
 
     logger.debug(f"loaded config: {config_path}")
     toml_dict = toml.load(config_path)

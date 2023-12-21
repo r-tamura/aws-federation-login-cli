@@ -1,5 +1,8 @@
 # AWS Federation Login CLI
 
+A tool to generate an URL for Sign in AWS Management Console using [AWS federation endpoint](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_enable-console-custom-url.html)
+
+
 ## How to use
 
 1. Create a config file in `$HOME/.config/aws_federation_cli/config.toml`
@@ -38,17 +41,3 @@ pip install -e .
 pip freeze --exclude-editable > requirements-dev.txt
 ```
 
-## その他
-
-### 3.10.0 環境だと動作しない
-
-PyInquirerが`prompt_prompt_toolkit`の1.0.14に依存していて、1.0.14ではpython3.10でエラーになるモジュールインポートをしている
-
-```sh
-  File "/Users/r-tamura/playground/aws-federation-login-cli/.venv/lib/python3.10/site-packages/prompt_toolkit/styles/from_dict.py", line 9, in <module>
-    from collections import Mapping
-ImportError: cannot import name 'Mapping' from 'collections' (/Users/r-tamura/.anyenv/envs/pyenv/versions/3.10.0/lib/python3.10/collections/__init__.py)
-```
-
-PyInquirerも開発が止まっているっぽいので、新しいバージョンをインストールできない。
-TODO: 他のライブラリへ移行すべき
