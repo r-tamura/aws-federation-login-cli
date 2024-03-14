@@ -22,7 +22,7 @@ license = { text = "MIT" }
 [project.scripts]
 aws-federation-login = "aws_federation_login.cli:main"
 [tool.pdm]
-package-type = "library"
+distribution = true
 
 [tool.pdm.dev-dependencies]
 test = ["pytest>=7.4.3", "requests-mock>=1.11.0"]

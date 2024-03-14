@@ -139,10 +139,12 @@ def generate_federation_url(
 ) -> str:
     """一時クレデンシャルからAWSコンソール画面へのサインインURLを作成します。"""
     if duration is None:
-        duration = 14400  # 4 hours
+        duration = 43200  # 12 hours
 
     signin_token = get_signin_token(credentials, duration)
     request_url = get_signin_url(signin_token, destination)
+
+    logger.debug(f"generated url: {destination=}, {duration=}")
     return request_url
 
 
